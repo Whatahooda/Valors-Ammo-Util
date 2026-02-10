@@ -31,6 +31,7 @@ public class AmmoOnMiss extends SimpleInstantInteraction {
                     ValorAmmoUtil.LOGGER.atWarning().log("RootInteraction " + onMissId + " is undefined");
                 }
                 else {
+                    this.next = onMissId;
                     interactionContext.getState().state = InteractionState.Finished;
                     interactionContext.execute(onMiss);
                 }

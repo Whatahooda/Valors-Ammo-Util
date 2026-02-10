@@ -23,6 +23,7 @@ public class ValorAmmoUtil extends JavaPlugin {
         this.getCodecRegistry(Interaction.CODEC).register("AmmoProjectile", ValorAmmoProjectile.class, ValorAmmoProjectile.CODEC);
         this.getCodecRegistry(Interaction.CODEC).register("AmmoOnHit", AmmoOnHit.class, AmmoOnHit.CODEC);
         this.getCodecRegistry(Interaction.CODEC).register("AmmoOnMiss", AmmoOnMiss.class, AmmoOnMiss.CODEC);
+        this.getCodecRegistry(Interaction.CODEC).register("AmmoRemove", AmmoRemove.class, AmmoRemove.CODEC);
         this.getCodecRegistry(Interaction.CODEC).register("AmmoInfo", AmmoInfo.class, AmmoInfo.CODEC);
 
         ammoInfoComponent = this.getEntityStoreRegistry().registerComponent(AmmoInfoComponent.class, AmmoInfoComponent::new);
