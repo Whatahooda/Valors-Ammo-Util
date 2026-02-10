@@ -24,7 +24,6 @@ public class AmmoOnMiss extends SimpleInstantInteraction {
         if (commandBuffer != null) {
             AmmoInfoComponent ammoInfoComponent = commandBuffer.getComponent(ref, ValorAmmoUtil.getAmmoInfoComponentType());
             if (ammoInfoComponent != null && ammoInfoComponent.getOnMissId() != null) {
-
                 String onMissId = ammoInfoComponent.getOnMissId();
                 RootInteraction onMiss = RootInteraction.getAssetMap().getAsset(onMissId);
                 if (onMiss == null) {
@@ -39,7 +38,7 @@ public class AmmoOnMiss extends SimpleInstantInteraction {
 
     static {
         CODEC = BuilderCodec.builder(AmmoOnMiss.class, AmmoOnMiss::new, SimpleInstantInteraction.CODEC)
-                .documentation("Applies Valor Ammo on miss effects and then Despawns the projectile")
+                .documentation("Applies Valor Ammo on miss effects")
                 .build();
     }
 }

@@ -129,6 +129,18 @@ public class ValorAmmoProjectile extends SimpleInstantInteraction implements Bal
         return new com.hypixel.hytale.protocol.ProjectileInteraction();
     }
 
+    protected void configurePacket(Interaction packet) {
+        super.configurePacket(packet);
+        com.hypixel.hytale.protocol.ProjectileInteraction p = (com.hypixel.hytale.protocol.ProjectileInteraction)packet;
+        ProjectileConfig config = this.getConfig();
+        if (config == null) {
+            String var10002 = this.getId();
+            throw new IllegalStateException("ProjectileInteraction '" + var10002 + "' has no valid ProjectileConfig: " + this.config);
+        } else {
+            p.configId = this.config;
+        }
+    }
+
     static {
         CODEC = ((BuilderCodec.builder(ValorAmmoProjectile.class, ValorAmmoProjectile::new, SimpleInstantInteraction.CODEC)
                 .documentation("Fires a projectile modified by ammo used previously in the Interaction chain."))

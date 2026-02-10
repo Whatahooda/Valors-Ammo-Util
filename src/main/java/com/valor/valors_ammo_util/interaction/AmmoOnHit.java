@@ -38,7 +38,7 @@ public class AmmoOnHit extends SimpleInstantInteraction {
 
     static {
         CODEC = BuilderCodec.builder(AmmoOnHit.class, AmmoOnHit::new, SimpleInstantInteraction.CODEC)
-                .documentation("Applies Valor Ammo on hit effects and then Despawns the projectile")
+                .documentation("Applies Valor Ammo on hit effects")
                 .build();
     }
 }
