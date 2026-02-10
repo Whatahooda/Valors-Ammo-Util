@@ -3,6 +3,7 @@ package com.valor.valors_ammo_util.interaction;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.protocol.InteractionState;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHandler;
@@ -30,6 +31,7 @@ public class AmmoOnHit extends SimpleInstantInteraction {
                     ValorAmmoUtil.LOGGER.atWarning().log("RootInteraction " + onHitId + " is undefined");
                 }
                 else {
+                    interactionContext.getState().state = InteractionState.Finished;
                     interactionContext.execute(onHit);
                 }
             }
