@@ -33,8 +33,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.UUID;
 
-public class ValorAmmoProjectile extends SimpleInstantInteraction implements BallisticDataProvider {
-    public static final BuilderCodec<ValorAmmoProjectile> CODEC;
+public class AmmoProjectileInteraction extends SimpleInstantInteraction implements BallisticDataProvider {
+    public static final BuilderCodec<AmmoProjectileInteraction> CODEC;
     private String config;
 
     @Nullable
@@ -145,7 +145,7 @@ public class ValorAmmoProjectile extends SimpleInstantInteraction implements Bal
     }
 
     static {
-        CODEC = ((BuilderCodec.builder(ValorAmmoProjectile.class, ValorAmmoProjectile::new, SimpleInstantInteraction.CODEC)
+        CODEC = ((BuilderCodec.builder(AmmoProjectileInteraction.class, AmmoProjectileInteraction::new, SimpleInstantInteraction.CODEC)
                 .documentation("Fires a projectile modified by ammo used previously in the Interaction chain."))
                 .appendInherited(new KeyedCodec<>("Config", Codec.STRING), (o, i) -> o.config = i, (o) -> o.config, (o, p) -> o.config = p.config)
                 .addValidator(ProjectileConfig.VALIDATOR_CACHE.getValidator().late())
