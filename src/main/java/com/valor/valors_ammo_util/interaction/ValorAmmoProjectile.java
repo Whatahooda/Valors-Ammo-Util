@@ -12,7 +12,9 @@ import com.hypixel.hytale.protocol.*;
 import com.hypixel.hytale.server.core.asset.type.model.config.Model;
 import com.hypixel.hytale.server.core.asset.type.model.config.ModelAsset;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
+import com.hypixel.hytale.server.core.modules.entity.component.BoundingBox;
 import com.hypixel.hytale.server.core.modules.entity.component.ModelComponent;
+import com.hypixel.hytale.server.core.modules.entity.component.PersistentModel;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHandler;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.SimpleInstantInteraction;
 import com.hypixel.hytale.server.core.modules.projectile.ProjectileModule;
@@ -87,7 +89,7 @@ public class ValorAmmoProjectile extends SimpleInstantInteraction implements Bal
             if (ammoPayload == null) return;
 
             // Attach ammo info component
-            AmmoInfoComponent ammoInfoComponent = new AmmoInfoComponent(ammoPayload.getAmmoItemId(), ammoPayload.getOnHitId(), ammoPayload.getOnMissId());
+            AmmoInfoComponent ammoInfoComponent = new AmmoInfoComponent(ammoPayload.getAmmoItemId(), ammoPayload.getModelAssetId(), ammoPayload.getOnHitId(), ammoPayload.getOnMissId());
             context.getCommandBuffer().addComponent(projectile, ValorAmmoUtil.getAmmoInfoComponentType(), ammoInfoComponent);
 
             // Change projectile ModelAsset based on ammo used
@@ -107,7 +109,8 @@ public class ValorAmmoProjectile extends SimpleInstantInteraction implements Bal
 
             Model newModel = Model.createScaledModel(modelAsset, 1);
             context.getCommandBuffer().replaceComponent(projectile, ModelComponent.getComponentType(), new ModelComponent(newModel));
-
+            context.getCommandBuffer().replaceComponent(projectile, PersistentModel.getComponentType(), new PersistentModel(newModel.toReference()));
+            context.getCommandBuffer().replaceComponent(projectile, BoundingBox.getComponentType(), new BoundingBox(newModel.getBoundingBox()));
         }
     }
 

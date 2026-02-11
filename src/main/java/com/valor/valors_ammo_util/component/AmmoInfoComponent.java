@@ -8,6 +8,8 @@ public class AmmoInfoComponent implements Component<EntityStore> {
     @Nullable
     private String itemId;
     @Nullable
+    private String modelId;
+    @Nullable
     private String onHitId;
     @Nullable
     private String onMissId;
@@ -16,19 +18,24 @@ public class AmmoInfoComponent implements Component<EntityStore> {
 
     }
 
-    public AmmoInfoComponent(@Nullable String itemId, @Nullable String onHitId, @Nullable String onMissId) {
+    public AmmoInfoComponent(@Nullable String itemId, @Nullable String modelId, @Nullable String onHitId, @Nullable String onMissId) {
         this.itemId = itemId;
+        this.modelId = modelId;
         this.onHitId = onHitId;
         this.onMissId = onMissId;
     }
 
     @Override
     public @Nullable Component<EntityStore> clone() {
-        return new AmmoInfoComponent(this.itemId, this.onHitId, this.onMissId);
+        return new AmmoInfoComponent(this.itemId, this.modelId, this.onHitId, this.onMissId);
     }
 
     public @Nullable String getItemId() {
         return itemId;
+    }
+
+    public @Nullable String getModelId() {
+        return modelId;
     }
 
     public @Nullable String getOnHitId() {
