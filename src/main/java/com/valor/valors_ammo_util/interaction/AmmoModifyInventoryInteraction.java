@@ -7,13 +7,13 @@ import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.asset.type.item.config.Item;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.entity.entities.Player;
-import com.hypixel.hytale.server.core.inventory.Inventory;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHandler;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Interaction;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.RootInteraction;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.SimpleInstantInteraction;
+import com.hypixel.hytale.server.core.modules.interaction.interaction.config.server.ModifyInventoryInteraction;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.valor.valors_ammo_util.ValorAmmoPayload;
 import com.valor.valors_ammo_util.ValorAmmoUtil;
@@ -22,8 +22,8 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.Map;
 
-public class ValorUseAmmo extends SimpleInstantInteraction {
-    public static final BuilderCodec<ValorUseAmmo> CODEC;
+public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
+    public static final BuilderCodec<AmmoModifyInventoryInteraction> CODEC;
 
     private String[] tagsToFind;
     private Integer amountToRemove = 1;
@@ -33,33 +33,29 @@ public class ValorUseAmmo extends SimpleInstantInteraction {
     @Override
     protected void firstRun(@NonNull InteractionType interactionType, @NonNull InteractionContext interactionContext, @NonNull CooldownHandler cooldownHandler) {
         PlayerRef playerRef = interactionContext.getEntity().getStore().getComponent(interactionContext.getEntity(), PlayerRef.getComponentType());
-        if (playerRef == null) return;
-
         Player player = interactionContext.getEntity().getStore().getComponent(interactionContext.getEntity(), Player.getComponentType());
-        if (player == null) return;
+        if (playerRef == null || player == null) {
+            interactionContext.getState().state = InteractionState.Failed;
+            return;
+        }
 
         // Search for our item to use as ammunition
         ItemStack itemStack;
-        Item item = null;
-        Inventory playerInventory = player.getInventory();
-        short stackIndexToModify = searchInventoryForTags(playerInventory.getStorage(), tagsToFind);
-        if (stackIndexToModify != -1) {
-            itemStack = playerInventory.getStorage().getItemStack(stackIndexToModify);
-            item = itemStack.getItem();
-            playerInventory.getStorage().removeItemStackFromSlot(stackIndexToModify, amountToRemove);
-        }
+        Item item;
+        ItemContainer playerInventoryAll = player.getInventory().getCombinedEverything();
 
-        stackIndexToModify = searchInventoryForTags(playerInventory.getHotbar(), tagsToFind);
-        if (stackIndexToModify != -1) {
-            itemStack = playerInventory.getHotbar().getItemStack(stackIndexToModify);
-            item = itemStack.getItem();
-            playerInventory.getHotbar().removeItemStackFromSlot(stackIndexToModify, amountToRemove);
-        }
-
+        short stackIndexToModify = searchInventoryForTags(playerInventoryAll, tagsToFind);
         if (stackIndexToModify == -1) {
             interactionContext.getState().state = InteractionState.Failed;
             return;
         }
+
+        // Use up ammo
+        // TODO Needs to account for using more than one item
+        itemStack = playerInventoryAll.getItemStack(stackIndexToModify);
+        assert itemStack != null;
+        item = itemStack.getItem();
+        playerInventoryAll.removeItemStackFromSlot(stackIndexToModify, amountToRemove);
 
         // Save the ammo information to alter the projectile on creation
         ValorAmmoPayload ammoPayload = generateAmmoPayload(item, this.useItemModel);
@@ -110,7 +106,7 @@ public class ValorUseAmmo extends SimpleInstantInteraction {
 
 
     static {
-        CODEC = BuilderCodec.builder(ValorUseAmmo.class, ValorUseAmmo::new, SimpleInstantInteraction.CODEC)
+        CODEC = BuilderCodec.builder(AmmoModifyInventoryInteraction.class, AmmoModifyInventoryInteraction::new, SimpleInstantInteraction.CODEC)
                 .documentation("Valor's Use Ammo will check for ammunition of your specified tag and remove it from the inventory")
                 .append(new KeyedCodec<>("TagsToFind", BuilderCodec.STRING_ARRAY), (interaction, s) -> interaction.tagsToFind = s, (interaction) -> interaction.tagsToFind)
                 .documentation("Items with these Ammo Tags will be treated as ammo")

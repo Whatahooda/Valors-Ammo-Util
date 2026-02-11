@@ -19,7 +19,7 @@ public class ValorAmmoUtil extends JavaPlugin {
 
     @Override
     protected void setup() {
-        this.getCodecRegistry(Interaction.CODEC).register("AmmoModifyInventory", ValorUseAmmo.class, ValorUseAmmo.CODEC);
+        this.getCodecRegistry(Interaction.CODEC).register("AmmoModifyInventory", AmmoModifyInventoryInteraction.class, AmmoModifyInventoryInteraction.CODEC);
         this.getCodecRegistry(Interaction.CODEC).register("AmmoProjectile", ValorAmmoProjectile.class, ValorAmmoProjectile.CODEC);
         this.getCodecRegistry(Interaction.CODEC).register("AmmoOnHit", AmmoOnHit.class, AmmoOnHit.CODEC);
         this.getCodecRegistry(Interaction.CODEC).register("AmmoOnMiss", AmmoOnMiss.class, AmmoOnMiss.CODEC);
