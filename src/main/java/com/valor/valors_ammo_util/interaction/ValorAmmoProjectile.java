@@ -110,7 +110,7 @@ public class ValorAmmoProjectile extends SimpleInstantInteraction implements Bal
             Model newModel = Model.createScaledModel(modelAsset, 1);
             context.getCommandBuffer().replaceComponent(projectile, ModelComponent.getComponentType(), new ModelComponent(newModel));
             context.getCommandBuffer().replaceComponent(projectile, PersistentModel.getComponentType(), new PersistentModel(newModel.toReference()));
-            context.getCommandBuffer().replaceComponent(projectile, BoundingBox.getComponentType(), new BoundingBox(newModel.getBoundingBox()));
+            if (newModel.getBoundingBox() != null) context.getCommandBuffer().replaceComponent(projectile, BoundingBox.getComponentType(), new BoundingBox(newModel.getBoundingBox()));
         }
     }
 
