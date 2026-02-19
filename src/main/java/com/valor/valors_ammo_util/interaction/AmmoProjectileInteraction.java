@@ -29,7 +29,6 @@ import com.hypixel.hytale.server.core.util.TargetUtil;
 import com.valor.valors_ammo_util.AmmoToStore;
 import com.valor.valors_ammo_util.ValorAmmoPayload;
 import com.valor.valors_ammo_util.ValorAmmoUtil;
-import com.valor.valors_ammo_util.ValorMetaKeys;
 import com.valor.valors_ammo_util.component.AmmoInfoComponent;
 
 import javax.annotation.Nonnull;

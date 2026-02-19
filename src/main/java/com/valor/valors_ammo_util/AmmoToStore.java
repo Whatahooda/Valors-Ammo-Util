@@ -7,7 +7,6 @@ import com.hypixel.hytale.server.core.inventory.ItemStack;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class AmmoToStore {
     public final static KeyedCodec<String[]> KEYED_CODEC_ID = new KeyedCodec<>("ItemIds", Codec.STRING_ARRAY);
