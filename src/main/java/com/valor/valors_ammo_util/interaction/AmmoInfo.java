@@ -7,6 +7,8 @@ import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Sim
 
 public class AmmoInfo extends SimpleInteraction {
     public static final BuilderCodec<AmmoInfo> CODEC;
+    public static final String AMMO_INFO_VAR_ID = "Ammo_Info";
+
     protected String modelAssetId;
     protected String interactionOnHitId;
     protected String interactionOnMissId;

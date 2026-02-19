@@ -9,9 +9,11 @@ import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.math.vector.Vector3f;
 import com.hypixel.hytale.protocol.*;
+import com.hypixel.hytale.server.core.asset.type.item.config.Item;
 import com.hypixel.hytale.server.core.asset.type.model.config.Model;
 import com.hypixel.hytale.server.core.asset.type.model.config.ModelAsset;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
+import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.modules.entity.component.BoundingBox;
 import com.hypixel.hytale.server.core.modules.entity.component.ModelComponent;
 import com.hypixel.hytale.server.core.modules.entity.component.PersistentModel;
@@ -24,6 +26,7 @@ import com.hypixel.hytale.server.core.modules.projectile.config.ProjectileConfig
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.PositionUtil;
 import com.hypixel.hytale.server.core.util.TargetUtil;
+import com.valor.valors_ammo_util.AmmoToStore;
 import com.valor.valors_ammo_util.ValorAmmoPayload;
 import com.valor.valors_ammo_util.ValorAmmoUtil;
 import com.valor.valors_ammo_util.ValorMetaKeys;
@@ -31,6 +34,7 @@ import com.valor.valors_ammo_util.component.AmmoInfoComponent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.UUID;
 
 public class AmmoProjectileInteraction extends SimpleInstantInteraction implements BallisticDataProvider {
@@ -57,6 +61,7 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
     }
 
     protected void firstRun(@Nonnull InteractionType type, @Nonnull InteractionContext context, @Nonnull CooldownHandler cooldownHandler) {
+        ValorAmmoUtil.LOGGER.atInfo().log("Beginning Projectile");
         ProjectileConfig config = this.getConfig();
         if (config != null) {
             // All copied from ProjectileInteraction.class
@@ -85,8 +90,37 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
             Ref<EntityStore> projectile = ProjectileModule.get().spawnProjectile(generatedUUID, ref, commandBuffer, config, position, direction);
 
             // VAU Logic starts here
-            ValorAmmoPayload ammoPayload = context.getMetaStore().getMetaObject(ValorMetaKeys.getMetaKey());
-            if (ammoPayload == null) return;
+            // Get ammo info from the held item metadata
+            ValorAmmoUtil.LOGGER.atInfo().log("Getting Held item Metadata:");
+            ItemStack heldItem = context.getHeldItem();
+            if (heldItem == null) {
+                ValorAmmoUtil.LOGGER.atWarning().log("heldItem is null");
+                return;
+            }
+
+            String[] itemIdsRaw = heldItem.getFromMetadataOrNull(AmmoToStore.KEYED_CODEC_ID);
+            ValorAmmoUtil.LOGGER.atInfo().log("Item Ids:\n" + Arrays.toString(itemIdsRaw));
+            assert itemIdsRaw != null;
+
+            int[] itemQuantitiesRaw = heldItem.getFromMetadataOrNull(AmmoToStore.KEYED_CODEC_QUANTITY);
+            ValorAmmoUtil.LOGGER.atInfo().log("Item Ids:\n" + Arrays.toString(itemQuantitiesRaw));
+            assert itemQuantitiesRaw != null;
+
+            // If there's no ammo info, stop here
+            AmmoToStore ammoToUse = new AmmoToStore(itemIdsRaw, itemQuantitiesRaw);
+            if (ammoToUse.size() < 1) {
+                ValorAmmoUtil.LOGGER.atWarning().log("Created ammoToUse has a size of 0");
+                return;
+            }
+
+            Item ammoItem = Item.getAssetMap().getAsset(ammoToUse.getItemId(0));
+            assert ammoItem != null;
+
+            ValorAmmoPayload ammoPayload = ValorAmmoPayload.generateAmmoPayload(ammoItem, true, AmmoInfo.AMMO_INFO_VAR_ID);
+
+            // Now remove 1 from the used item quantity and apply the change to the held item
+            ammoToUse.useItem();
+            context.getHeldItemContainer().replaceItemStackInSlot(context.getHeldItemSlot(), heldItem, ammoToUse.addMetadataToStack(heldItem));
 
             // Attach ammo info component
             AmmoInfoComponent ammoInfoComponent = new AmmoInfoComponent(ammoPayload.getAmmoItemId(), ammoPayload.getModelAssetId(), ammoPayload.getOnHitId(), ammoPayload.getOnMissId());
