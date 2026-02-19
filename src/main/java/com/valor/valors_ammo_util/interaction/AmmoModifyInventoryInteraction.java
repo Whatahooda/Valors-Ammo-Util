@@ -129,10 +129,17 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
             }
         }
 
-        //if (autoSetAmmoStat) statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), (float) ammoUsed + alreadyLoaded);
+        if (autoSetAmmoStat) statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), (float) ammoUsed + alreadyLoaded);
 
         ItemStack stackWithAmmoData = ammoToStore.addMetadataToStack(heldItem);
-        ItemStackSlotTransaction transaction = interactionContext.getHeldItemContainer().replaceItemStackInSlot(interactionContext.getHeldItemSlot(), heldItem, stackWithAmmoData);
+
+        interactionContext.setHeldItem(
+                stackWithAmmoData
+        );
+        ItemStackSlotTransaction transaction = interactionContext.getHeldItemContainer().replaceItemStackInSlot(
+                interactionContext.getHeldItemSlot(), heldItem, stackWithAmmoData
+        );
+
         ValorAmmoUtil.LOGGER.atInfo().log("Transaction:\n" + transaction);
         ValorAmmoUtil.LOGGER.atInfo().log("Ending modifyInventory");
     }

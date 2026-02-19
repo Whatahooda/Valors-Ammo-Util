@@ -60,7 +60,6 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
     }
 
     protected void firstRun(@Nonnull InteractionType type, @Nonnull InteractionContext context, @Nonnull CooldownHandler cooldownHandler) {
-        ValorAmmoUtil.LOGGER.atInfo().log("Beginning Projectile");
         ProjectileConfig config = this.getConfig();
         if (config != null) {
             // All copied from ProjectileInteraction.class
@@ -119,14 +118,22 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
 
             // Now remove 1 from the used item quantity and apply the change to the held item
             ammoToUse.useItem();
-            context.getHeldItemContainer().replaceItemStackInSlot(context.getHeldItemSlot(), heldItem, ammoToUse.addMetadataToStack(heldItem));
+            context.setHeldItem(
+                    ammoToUse.addMetadataToStack(heldItem)
+            );
+            context.getHeldItemContainer().replaceItemStackInSlot(
+                    context.getHeldItemSlot(), heldItem, ammoToUse.addMetadataToStack(heldItem)
+            );
 
             // Attach ammo info component
             AmmoInfoComponent ammoInfoComponent = new AmmoInfoComponent(ammoPayload.getAmmoItemId(), ammoPayload.getModelAssetId(), ammoPayload.getOnHitId(), ammoPayload.getOnMissId());
-            context.getCommandBuffer().addComponent(projectile, ValorAmmoUtil.getAmmoInfoComponentType(), ammoInfoComponent);
+            commandBuffer.addComponent(projectile, ValorAmmoUtil.getAmmoInfoComponentType(), ammoInfoComponent);
 
             // Change projectile ModelAsset based on ammo used
-            if (!ammoPayload.getUseModel()) return;
+            if (!ammoPayload.getUseModel()) {
+                ValorAmmoUtil.LOGGER.atWarning().log("Not applying model ID because UseModel is false");
+                return;
+            }
 
             String modelAssetId = ammoPayload.getModelAssetId();
             if (modelAssetId == null) {
@@ -141,9 +148,21 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
             }
 
             Model newModel = Model.createScaledModel(modelAsset, 1);
-            context.getCommandBuffer().replaceComponent(projectile, ModelComponent.getComponentType(), new ModelComponent(newModel));
-            context.getCommandBuffer().replaceComponent(projectile, PersistentModel.getComponentType(), new PersistentModel(newModel.toReference()));
-            if (newModel.getBoundingBox() != null) context.getCommandBuffer().replaceComponent(projectile, BoundingBox.getComponentType(), new BoundingBox(newModel.getBoundingBox()));
+            commandBuffer.replaceComponent(
+                    projectile,
+                    ModelComponent.getComponentType(),
+                    new ModelComponent(newModel)
+            );
+            commandBuffer.replaceComponent(
+                    projectile,
+                    PersistentModel.getComponentType(),
+                    new PersistentModel(newModel.toReference())
+            );
+            if (newModel.getBoundingBox() != null) commandBuffer.replaceComponent(
+                    projectile,
+                    BoundingBox.getComponentType(),
+                    new BoundingBox(newModel.getBoundingBox())
+            );
         }
     }
 
