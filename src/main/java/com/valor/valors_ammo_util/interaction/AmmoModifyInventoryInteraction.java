@@ -2,17 +2,13 @@ package com.valor.valors_ammo_util.interaction;
 
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
-import com.hypixel.hytale.protocol.ChangeStatBehaviour;
 import com.hypixel.hytale.protocol.InteractionState;
 import com.hypixel.hytale.protocol.InteractionType;
-import com.hypixel.hytale.protocol.ValueType;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.asset.type.item.config.Item;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
-import com.hypixel.hytale.server.core.inventory.transaction.ItemStackSlotTransaction;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
 import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
@@ -22,8 +18,6 @@ import com.hypixel.hytale.server.core.modules.interaction.interaction.config.ser
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.valor.valors_ammo_util.AmmoToStore;
 import com.valor.valors_ammo_util.ValorAmmoUtil;
-import it.unimi.dsi.fastutil.ints.AbstractInt2FloatMap;
-import it.unimi.dsi.fastutil.ints.Int2FloatMap;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
