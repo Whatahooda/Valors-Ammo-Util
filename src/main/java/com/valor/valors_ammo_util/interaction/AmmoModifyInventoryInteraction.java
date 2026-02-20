@@ -2,8 +2,11 @@ package com.valor.valors_ammo_util.interaction;
 
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.protocol.ChangeStatBehaviour;
 import com.hypixel.hytale.protocol.InteractionState;
 import com.hypixel.hytale.protocol.InteractionType;
+import com.hypixel.hytale.protocol.ValueType;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.asset.type.item.config.Item;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.entity.entities.Player;
@@ -19,6 +22,8 @@ import com.hypixel.hytale.server.core.modules.interaction.interaction.config.ser
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.valor.valors_ammo_util.AmmoToStore;
 import com.valor.valors_ammo_util.ValorAmmoUtil;
+import it.unimi.dsi.fastutil.ints.AbstractInt2FloatMap;
+import it.unimi.dsi.fastutil.ints.Int2FloatMap;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -39,12 +44,11 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
 
     @Override
     protected void firstRun(@NonNull InteractionType interactionType, @NonNull InteractionContext interactionContext, @NonNull CooldownHandler cooldownHandler) {
-        ValorAmmoUtil.LOGGER.atInfo().log("Beginning modifyInventory");
-
         PlayerRef playerRef = interactionContext.getEntity().getStore().getComponent(interactionContext.getEntity(), PlayerRef.getComponentType());
         Player player = interactionContext.getEntity().getStore().getComponent(interactionContext.getEntity(), Player.getComponentType());
         if (playerRef == null || player == null) {
             interactionContext.getState().state = InteractionState.Failed;
+            ValorAmmoUtil.LOGGER.atInfo().log("No player found");
             return;
         }
 
@@ -55,8 +59,13 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         assert statMap != null;
         EntityStatValue ammoStat = statMap.get(DefaultEntityStatTypes.getAmmo());
         float alreadyLoaded = 0;
+        double remainingAmmoCost = amountToRemove;
+        double ammoUsed = 0;
 
-        if (ammoStat != null) alreadyLoaded = ammoStat.get();
+        if (ammoStat != null && ammoStat.getMax() > 0) {
+            alreadyLoaded = ammoStat.get();
+            remainingAmmoCost = Math.min(remainingAmmoCost, ammoStat.getMax() - alreadyLoaded);
+        }
 
         // Check for ammo already loaded in the item
         AmmoToStore ammoToStore = new AmmoToStore();
@@ -69,13 +78,8 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
             }
         }
 
-        double remainingAmmoCost = amountToRemove - alreadyLoaded;
-        double ammoUsed = 0;
-
-//        playerRef.sendMessage(Message.raw("[VAU] Item Ammo Max: " + ammoStat.getMax() + ", and current ammo set: " + alreadyLoaded));
         if (alreadyLoaded > 0 && alreadyLoaded >= ammoStat.getMax()) {
             interactionContext.getState().state = InteractionState.Failed;
-//            playerRef.sendMessage(Message.raw("[VAU] Item Ammo full or Item Ammo Max is 0"));
             return;
         }
 
@@ -86,10 +90,8 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         searchInventoryForAmmo(playerInventoryAll, ammoFound, tagsToFind, itemsToFind, noAmmoMixing);
         if (ammoFound.isEmpty()) {
             interactionContext.getState().state = InteractionState.Failed;
-//            playerRef.sendMessage(Message.raw("[VAU] Failed to find any ammo"));
             return;
         }
-//        playerRef.sendMessage(Message.raw("[VAU] Found " + ammoFound.size() + " different ammo stacks to use"));
 
         // Use up ammo
         for (short i : ammoFound) {
@@ -129,19 +131,18 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
             }
         }
 
-        if (autoSetAmmoStat) statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), (float) ammoUsed + alreadyLoaded);
+        if (autoSetAmmoStat) {
+            statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), (float) ammoUsed + alreadyLoaded);
+        }
 
         ItemStack stackWithAmmoData = ammoToStore.addMetadataToStack(heldItem);
 
         interactionContext.setHeldItem(
                 stackWithAmmoData
         );
-        ItemStackSlotTransaction transaction = interactionContext.getHeldItemContainer().replaceItemStackInSlot(
+        interactionContext.getHeldItemContainer().replaceItemStackInSlot(
                 interactionContext.getHeldItemSlot(), heldItem, stackWithAmmoData
         );
-
-        ValorAmmoUtil.LOGGER.atInfo().log("Transaction:\n" + transaction);
-        ValorAmmoUtil.LOGGER.atInfo().log("Ending modifyInventory");
     }
 
     private void searchInventoryForAmmo(ItemContainer inventoryContainer,
@@ -209,25 +210,60 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
 
     static {
         CODEC = BuilderCodec.builder(AmmoModifyInventoryInteraction.class, AmmoModifyInventoryInteraction::new, SimpleInstantInteraction.CODEC)
-                .documentation("Valor's Use Ammo will check for ammunition of your specified tag and remove it from the inventory")
-                .append(new KeyedCodec<>("TagsToFind", BuilderCodec.STRING_ARRAY), (interaction, s) -> interaction.tagsToFind = s, (interaction) -> interaction.tagsToFind)
+                .documentation("Ammo Modify Inventory will check for ammunition of your specified tag and remove it from the inventory")
+                .appendInherited(
+                        new KeyedCodec<>("TagsToFind", BuilderCodec.STRING_ARRAY),
+                        (interaction, s) -> interaction.tagsToFind = s,
+                        (interaction) -> interaction.tagsToFind,
+                        (interaction, parent) -> interaction.tagsToFind = parent.tagsToFind
+                )
                 .documentation("Items with these Ammo Tags will be treated as ammo")
                 .add()
-                .append(new KeyedCodec<>("ItemsToFind", BuilderCodec.STRING_ARRAY), (interaction, s) -> interaction.itemsToFind = s, (interaction) -> interaction.itemsToFind)
+                .appendInherited(
+                        new KeyedCodec<>("ItemsToFind", BuilderCodec.STRING_ARRAY),
+                        (interaction, s) -> interaction.itemsToFind = s,
+                        (interaction) -> interaction.itemsToFind,
+                        (interaction, parent) -> interaction.itemsToFind = parent.itemsToFind
+                )
                 .documentation("A list of specific items to use as ammo")
                 .add()
-                .append(new KeyedCodec<>("AmountToRemove", BuilderCodec.INTEGER), (interaction, i) -> interaction.amountToRemove = i, (interaction) -> interaction.amountToRemove)
+                .appendInherited(
+                        new KeyedCodec<>("AmountToRemove", BuilderCodec.INTEGER),
+                        (interaction, i) -> interaction.amountToRemove = i,
+                        (interaction) -> interaction.amountToRemove,
+                        (interaction, parent) -> interaction.amountToRemove = parent.amountToRemove
+                )
                 .add()
-                .append(new KeyedCodec<>("NoAmmoMixing", BuilderCodec.BOOLEAN), (interaction, b) -> interaction.noAmmoMixing = b, (interaction) -> interaction.noAmmoMixing)
+                .appendInherited(
+                        new KeyedCodec<>("NoAmmoMixing", BuilderCodec.BOOLEAN),
+                        (interaction, b) -> interaction.noAmmoMixing = b,
+                        (interaction) -> interaction.noAmmoMixing,
+                        (interaction, parent) -> interaction.noAmmoMixing = parent.noAmmoMixing
+                )
                 .documentation("Set to true if you don't want items with different ids to be used together when removing more than 1 item")
                 .add()
-                .append(new KeyedCodec<>("ManuallyTrackAmmoStat", BuilderCodec.BOOLEAN), (interaction, b) -> interaction.autoSetAmmoStat = !b, (interaction) -> !interaction.autoSetAmmoStat)
+                .appendInherited(
+                        new KeyedCodec<>("ManuallyTrackAmmoStat", BuilderCodec.BOOLEAN),
+                        (interaction, b) -> interaction.autoSetAmmoStat = !b,
+                        (interaction) -> !interaction.autoSetAmmoStat,
+                        (interaction, parent) -> interaction.autoSetAmmoStat = parent.autoSetAmmoStat
+                )
                 .documentation("Set to true if you want to handle the Ammo Stat yourself, instead of it being automatically set. Typically done when immediately firing projectiles.")
                 .add()
-                .append(new KeyedCodec<>("AmmoInfoVar", BuilderCodec.STRING), (interaction, b) -> interaction.itemAmmoInfoVar = b, (interaction) -> interaction.itemAmmoInfoVar)
+                .appendInherited(
+                        new KeyedCodec<>("AmmoInfoVar", BuilderCodec.STRING),
+                        (interaction, s) -> interaction.itemAmmoInfoVar = s,
+                        (interaction) -> interaction.itemAmmoInfoVar,
+                        (interaction, parent) -> interaction.itemAmmoInfoVar = parent.itemAmmoInfoVar
+                )
                 .documentation("The Interaction Var where your AmmoInfo lives on your ammo item. Can be null")
                 .add()
-                .append(new KeyedCodec<>("UseItemModel", BuilderCodec.BOOLEAN), (interaction, b) -> interaction.useItemModel = b, (interaction) -> interaction.useItemModel)
+                .appendInherited(
+                        new KeyedCodec<>("UseItemModel", BuilderCodec.BOOLEAN),
+                        (interaction, b) -> interaction.useItemModel = b,
+                        (interaction) -> interaction.useItemModel,
+                        (interaction, parent) -> interaction.useItemModel = parent.useItemModel
+                )
                 .documentation("Set to False if you don't want the AmmoInfo to override the projectile model")
                 .add()
                 .build();
