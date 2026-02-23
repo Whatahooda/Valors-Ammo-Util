@@ -21,8 +21,7 @@ public class AmmoToStore {
     }
 
     public AmmoToStore(String[] existingIds, int[] existingQuantities) {
-        if (existingIds.length != existingQuantities.length) {
-            ValorAmmoUtil.LOGGER.atSevere().log("Creating AmmoToStore while provided array lengths are not equal, initializing as empty\nexistingIds length: " + existingIds.length + " !+ " + "existingQuantities: " + existingQuantities.length);
+        if (existingIds == null || existingQuantities == null || existingIds.length != existingQuantities.length) {
             this.itemIds = new ArrayList<>();
             this.itemQuantity = new ArrayList<>();
             return;

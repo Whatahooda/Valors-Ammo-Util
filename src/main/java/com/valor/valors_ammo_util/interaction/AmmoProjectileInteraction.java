@@ -89,7 +89,6 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
 
             // VAU Logic starts here
             // Get ammo info from the held item metadata
-            ValorAmmoUtil.LOGGER.atInfo().log("Getting Held item Metadata:");
             ItemStack heldItem = context.getHeldItem();
             if (heldItem == null) {
                 ValorAmmoUtil.LOGGER.atWarning().log("heldItem is null");
@@ -97,17 +96,14 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
             }
 
             String[] itemIdsRaw = heldItem.getFromMetadataOrNull(AmmoToStore.KEYED_CODEC_ID);
-            ValorAmmoUtil.LOGGER.atInfo().log("Item Ids:\n" + Arrays.toString(itemIdsRaw));
             assert itemIdsRaw != null;
 
             int[] itemQuantitiesRaw = heldItem.getFromMetadataOrNull(AmmoToStore.KEYED_CODEC_QUANTITY);
-            ValorAmmoUtil.LOGGER.atInfo().log("Item Ids:\n" + Arrays.toString(itemQuantitiesRaw));
             assert itemQuantitiesRaw != null;
 
             // If there's no ammo info, stop here
             AmmoToStore ammoToUse = new AmmoToStore(itemIdsRaw, itemQuantitiesRaw);
             if (ammoToUse.size() < 1) {
-                ValorAmmoUtil.LOGGER.atWarning().log("Created ammoToUse has a size of 0");
                 return;
             }
 
