@@ -33,7 +33,6 @@ import com.valor.valors_ammo_util.component.AmmoInfoComponent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.UUID;
 
 public class AmmoProjectileInteraction extends SimpleInstantInteraction implements BallisticDataProvider {
