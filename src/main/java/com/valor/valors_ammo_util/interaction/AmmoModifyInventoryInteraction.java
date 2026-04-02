@@ -7,7 +7,9 @@ import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.asset.type.item.config.Item;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.inventory.InventoryComponent;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
+import com.hypixel.hytale.server.core.inventory.container.CombinedItemContainer;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
@@ -79,9 +81,14 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
 
         // Search for our item to use as ammunition
         ArrayList<Short> ammoFound = new ArrayList<>();
-        ItemContainer playerInventoryAll = player.getInventory().getCombinedEverything();
+        CombinedItemContainer inventory = InventoryComponent.getCombined(
+                interactionContext.getEntity().getStore(),
+                interactionContext.getEntity(),
+                InventoryComponent.getComponentTypeById(InventoryComponent.HOTBAR_SECTION_ID),
+                InventoryComponent.getComponentTypeById(InventoryComponent.STORAGE_SECTION_ID)
+        );
 
-        searchInventoryForAmmo(playerInventoryAll, ammoFound, tagsToFind, itemsToFind, noAmmoMixing);
+        searchInventoryForAmmo(inventory, ammoFound, tagsToFind, itemsToFind, noAmmoMixing);
         if (ammoFound.isEmpty()) {
             interactionContext.getState().state = InteractionState.Failed;
             return;
@@ -89,7 +96,7 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
 
         // Use up ammo
         for (short i : ammoFound) {
-            ItemStack itemStack = playerInventoryAll.getItemStack(i);
+            ItemStack itemStack = inventory.getItemStack(i);
             assert itemStack != null;
             if (itemStack.getMaxDurability() > 0) {
                 if (itemStack.getDurability() < remainingAmmoCost) {
@@ -97,12 +104,12 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
 
                     remainingAmmoCost -= itemStack.getDurability();
                     ammoUsed += itemStack.getDurability();
-                    playerInventoryAll.replaceItemStackInSlot(i, itemStack, itemStack.withDurability(0));
+                    inventory.replaceItemStackInSlot(i, itemStack, itemStack.withDurability(0));
                 }
                 else {
                     ammoToStore.addItem(itemStack.getItemId(), (int) remainingAmmoCost);
 
-                    playerInventoryAll.replaceItemStackInSlot(i, itemStack, itemStack.withDurability(itemStack.getDurability() - remainingAmmoCost));
+                    inventory.replaceItemStackInSlot(i, itemStack, itemStack.withDurability(itemStack.getDurability() - remainingAmmoCost));
                     ammoUsed += remainingAmmoCost;
                     break;
                 }
@@ -113,12 +120,12 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
 
                     remainingAmmoCost -= itemStack.getQuantity();
                     ammoUsed += itemStack.getDurability();
-                    playerInventoryAll.removeItemStackFromSlot(i);
+                    inventory.removeItemStackFromSlot(i);
                 }
                 else {
                     ammoToStore.addItem(itemStack.getItemId(), (int) remainingAmmoCost);
 
-                    playerInventoryAll.removeItemStackFromSlot(i, (int) remainingAmmoCost);
+                    inventory.removeItemStackFromSlot(i, (int) remainingAmmoCost);
                     ammoUsed += remainingAmmoCost;
                     break;
                 }

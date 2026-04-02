@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.valor"
-version = "0.2.3"
+version = "0.2.4"
 val javaVersion = 25
 
 repositories {
