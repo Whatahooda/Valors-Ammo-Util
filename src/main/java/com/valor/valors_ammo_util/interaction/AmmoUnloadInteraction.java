@@ -57,7 +57,8 @@ public class AmmoUnloadInteraction extends SimpleInstantInteraction {
                 interactionContext.getEntity().getStore(),
                 interactionContext.getEntity(),
                 InventoryComponent.getComponentTypeById(InventoryComponent.HOTBAR_SECTION_ID),
-                InventoryComponent.getComponentTypeById(InventoryComponent.STORAGE_SECTION_ID)
+                InventoryComponent.getComponentTypeById(InventoryComponent.STORAGE_SECTION_ID),
+                InventoryComponent.getComponentTypeById(InventoryComponent.BACKPACK_SECTION_ID)
         );
 
         for (int i = 0; i < existingIds.length; i++) {

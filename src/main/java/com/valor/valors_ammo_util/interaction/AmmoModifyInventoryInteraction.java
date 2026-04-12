@@ -85,7 +85,8 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
                 interactionContext.getEntity().getStore(),
                 interactionContext.getEntity(),
                 InventoryComponent.getComponentTypeById(InventoryComponent.HOTBAR_SECTION_ID),
-                InventoryComponent.getComponentTypeById(InventoryComponent.STORAGE_SECTION_ID)
+                InventoryComponent.getComponentTypeById(InventoryComponent.STORAGE_SECTION_ID),
+                InventoryComponent.getComponentTypeById(InventoryComponent.BACKPACK_SECTION_ID)
         );
 
         searchInventoryForAmmo(inventory, ammoFound, tagsToFind, itemsToFind, noAmmoMixing);
