@@ -126,7 +126,6 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
 
             // Change projectile ModelAsset based on ammo used
             if (!ammoPayload.getUseModel()) {
-                ValorAmmoUtil.LOGGER.atWarning().log("Not applying model ID because UseModel is false");
                 return;
             }
 

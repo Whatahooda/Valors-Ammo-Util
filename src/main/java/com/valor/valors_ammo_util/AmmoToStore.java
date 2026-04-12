@@ -65,17 +65,20 @@ public class AmmoToStore {
         else {
             this.itemQuantity.set(0, this.itemQuantity.getFirst() - 1);
         }
-        ValorAmmoUtil.LOGGER.atInfo().log("useItem results:\nIds: " + this.itemIds + "\nQuantities: " + this.itemQuantity);
     }
 
-    public ItemStack addMetadataToStack(ItemStack itemStack) {
-        String[] itemIdsRaw = listToArray(this.itemIds);
+    public static ItemStack addMetadataToStack(ItemStack itemStack, ArrayList<String> itemIds, ArrayList<Integer> itemQuantity) {
+        String[] itemIdsRaw = listToArray(itemIds);
         ItemStack withIds = itemStack.withMetadata(KEYED_CODEC_ID, itemIdsRaw);
 
         int[] itemQuantityRaw = itemQuantity.stream().mapToInt(i -> i).toArray();
         ItemStack withAll = withIds.withMetadata(KEYED_CODEC_QUANTITY, itemQuantityRaw);
 
         return withAll;
+    }
+
+    public ItemStack addMetadataToStack(ItemStack itemStack) {
+        return addMetadataToStack(itemStack, this.itemIds, this.itemQuantity);
     }
 
     @Nonnull
