@@ -5,6 +5,8 @@ import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.protocol.InteractionState;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.asset.type.item.config.Item;
+import com.hypixel.hytale.component.CommandBuffer;
+import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.inventory.InventoryComponent;
@@ -20,6 +22,8 @@ import com.hypixel.hytale.server.core.modules.interaction.interaction.config.ser
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.valor.valors_ammo_util.AmmoToStore;
 import com.valor.valors_ammo_util.ValorAmmoUtil;
+import com.valor.valors_ammo_util.component.LoadedAmmoComponent;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -51,31 +55,56 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         ItemStack heldItem = interactionContext.getHeldItem();
         assert heldItem != null;
 
+        CommandBuffer<EntityStore> commandBuffer = interactionContext.getCommandBuffer();
+        if (commandBuffer == null) {
+            interactionContext.getState().state = InteractionState.Failed;
+            return;
+        }
+        Ref<EntityStore> playerEntity = interactionContext.getEntity();
+
         EntityStatMap statMap = interactionContext.getEntity().getStore().getComponent(interactionContext.getEntity(), EntityStatMap.getComponentType());
         assert statMap != null;
         EntityStatValue ammoStat = statMap.get(DefaultEntityStatTypes.getAmmo());
-        float alreadyLoaded = 0;
+        float ammoStatValue = ammoStat != null ? ammoStat.get() : 0;
         double remainingAmmoCost = amountToRemove;
         double ammoUsed = 0;
 
+        LoadedAmmoComponent loadedAmmoComponent = commandBuffer.getComponent(playerEntity, ValorAmmoUtil.getLoadedAmmoComponentType());
+        String[] existingIds = loadedAmmoComponent != null ? loadedAmmoComponent.getItemIds() : new String[0];
+        int[] existingQuantities = loadedAmmoComponent != null ? loadedAmmoComponent.getItemQuantities() : new int[0];
+        int alreadyLoadedFromMetadata = AmmoToStore.getStoredAmmoCount(existingIds, existingQuantities);
+
+        ValorAmmoUtil.LOGGER.atInfo().log(
+            "[VAU][DrawStart] player=%s bowId=%s bowHash=%d bowIdentity=%d ammoStat=%s metadata=%s fullMeta=%s",
+                playerRef.getUuid(),
+            heldItem.getItemId(),
+                heldItem.hashCode(),
+                System.identityHashCode(heldItem),
+                ammoStatValue,
+                AmmoToStore.metadataDebugString(existingIds, existingQuantities),
+                String.valueOf(heldItem.getMetadata())
+        );
+
         if (ammoStat != null && ammoStat.getMax() > 0) {
-            alreadyLoaded = ammoStat.get();
-            remainingAmmoCost = Math.min(remainingAmmoCost, ammoStat.getMax() - alreadyLoaded);
+            remainingAmmoCost = Math.min(remainingAmmoCost, ammoStat.getMax() - alreadyLoadedFromMetadata);
         }
 
         // Check for ammo already loaded in the item
         AmmoToStore ammoToStore = new AmmoToStore();
-        if (alreadyLoaded != 0) {
-            String[] existingIds = heldItem.getFromMetadataOrNull(AmmoToStore.KEYED_CODEC_ID);
-            int[] existingQuantities = heldItem.getFromMetadataOrNull(AmmoToStore.KEYED_CODEC_QUANTITY);
-
-            if (existingIds != null && existingQuantities != null) {
-                ammoToStore = new AmmoToStore(existingIds, existingQuantities);
-            }
+        if (existingIds.length > 0 && existingQuantities.length > 0) {
+            ammoToStore = new AmmoToStore(existingIds, existingQuantities);
         }
 
-        if (alreadyLoaded > 0 && alreadyLoaded >= ammoStat.getMax()) {
-            interactionContext.getState().state = InteractionState.Failed;
+        if (ammoStat != null && ammoStat.getMax() > 0 && alreadyLoadedFromMetadata >= ammoStat.getMax()) {
+                statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), alreadyLoadedFromMetadata);
+            ValorAmmoUtil.LOGGER.atInfo().log(
+                "[VAU][DrawAlreadyLoaded] player=%s loadedMetadata=%d ammoStat=%s ammoStatMax=%s fullMeta=%s",
+                    playerRef.getUuid(),
+                    alreadyLoadedFromMetadata,
+                    ammoStatValue,
+                ammoStat.getMax(),
+                String.valueOf(heldItem.getMetadata())
+            );
             return;
         }
 
@@ -99,6 +128,8 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         for (short i : ammoFound) {
             ItemStack itemStack = inventory.getItemStack(i);
             assert itemStack != null;
+            int beforeQuantity = itemStack.getQuantity();
+            double beforeDurability = itemStack.getDurability();
             if (itemStack.getMaxDurability() > 0) {
                 if (itemStack.getDurability() < remainingAmmoCost) {
                     ammoToStore.addItem(itemStack.getItemId(), (int) itemStack.getDurability());
@@ -106,12 +137,36 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
                     remainingAmmoCost -= itemStack.getDurability();
                     ammoUsed += itemStack.getDurability();
                     inventory.replaceItemStackInSlot(i, itemStack, itemStack.withDurability(0));
+
+                    ValorAmmoUtil.LOGGER.atInfo().log(
+                            "[VAU][AmmoRemove] player=%s arrowId=%s ammoHash=%d ammoIdentity=%d slot=%d beforeQty=%d beforeDurability=%s afterDurability=0 used=%s",
+                            playerRef.getUuid(),
+                            itemStack.getItemId(),
+                            itemStack.hashCode(),
+                            System.identityHashCode(itemStack),
+                            i,
+                            beforeQuantity,
+                            beforeDurability,
+                            ammoUsed
+                    );
                 }
                 else {
                     ammoToStore.addItem(itemStack.getItemId(), (int) remainingAmmoCost);
 
                     inventory.replaceItemStackInSlot(i, itemStack, itemStack.withDurability(itemStack.getDurability() - remainingAmmoCost));
                     ammoUsed += remainingAmmoCost;
+                    ValorAmmoUtil.LOGGER.atInfo().log(
+                            "[VAU][AmmoRemove] player=%s arrowId=%s ammoHash=%d ammoIdentity=%d slot=%d beforeQty=%d beforeDurability=%s afterDurability=%s used=%s",
+                            playerRef.getUuid(),
+                            itemStack.getItemId(),
+                            itemStack.hashCode(),
+                            System.identityHashCode(itemStack),
+                            i,
+                            beforeQuantity,
+                            beforeDurability,
+                            itemStack.getDurability() - remainingAmmoCost,
+                            ammoUsed
+                    );
                     break;
                 }
             }
@@ -120,30 +175,75 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
                     ammoToStore.addItem(itemStack.getItemId(), itemStack.getQuantity());
 
                     remainingAmmoCost -= itemStack.getQuantity();
-                    ammoUsed += itemStack.getDurability();
+                    ammoUsed += itemStack.getQuantity();
                     inventory.removeItemStackFromSlot(i);
+
+                    ValorAmmoUtil.LOGGER.atInfo().log(
+                            "[VAU][AmmoRemove] player=%s arrowId=%s ammoHash=%d ammoIdentity=%d slot=%d beforeQty=%d afterQty=0 used=%s",
+                            playerRef.getUuid(),
+                            itemStack.getItemId(),
+                            itemStack.hashCode(),
+                            System.identityHashCode(itemStack),
+                            i,
+                            beforeQuantity,
+                            ammoUsed
+                    );
                 }
                 else {
                     ammoToStore.addItem(itemStack.getItemId(), (int) remainingAmmoCost);
 
                     inventory.removeItemStackFromSlot(i, (int) remainingAmmoCost);
                     ammoUsed += remainingAmmoCost;
+                    ValorAmmoUtil.LOGGER.atInfo().log(
+                            "[VAU][AmmoRemove] player=%s arrowId=%s ammoHash=%d ammoIdentity=%d slot=%d beforeQty=%d removed=%d afterQty=%d used=%s",
+                            playerRef.getUuid(),
+                            itemStack.getItemId(),
+                            itemStack.hashCode(),
+                            System.identityHashCode(itemStack),
+                            i,
+                            beforeQuantity,
+                            (int) remainingAmmoCost,
+                            beforeQuantity - (int) remainingAmmoCost,
+                            ammoUsed
+                    );
                     break;
                 }
             }
         }
 
         if (autoSetAmmoStat) {
-            statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), (float) ammoUsed + alreadyLoaded);
+            statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), (float) ammoUsed + alreadyLoadedFromMetadata);
         }
 
-        ItemStack stackWithAmmoData = ammoToStore.addMetadataToStack(heldItem);
-
-        interactionContext.setHeldItem(
-                stackWithAmmoData
+        // Build full arrays from ammoToStore without touching held item metadata.
+        ArrayList<String> nextIds = new ArrayList<>();
+        ArrayList<Integer> nextQty = new ArrayList<>();
+        for (int idx = 0; idx < ammoToStore.size(); idx++) {
+            nextIds.add(ammoToStore.getItemId(idx));
+            nextQty.add(ammoToStore.getItemQuantity(idx));
+        }
+        LoadedAmmoComponent nextLoadedAmmo = new LoadedAmmoComponent(
+            AmmoToStore.listToArray(nextIds),
+            nextQty.stream().mapToInt(Integer::intValue).toArray()
         );
-        interactionContext.getHeldItemContainer().replaceItemStackInSlot(
-                interactionContext.getHeldItemSlot(), heldItem, stackWithAmmoData
+
+        if (loadedAmmoComponent == null) {
+            commandBuffer.addComponent(playerEntity, ValorAmmoUtil.getLoadedAmmoComponentType(), nextLoadedAmmo);
+        }
+        else {
+            commandBuffer.replaceComponent(playerEntity, ValorAmmoUtil.getLoadedAmmoComponentType(), nextLoadedAmmo);
+        }
+
+        ValorAmmoUtil.LOGGER.atInfo().log(
+            "[VAU][DrawLoaded] player=%s replaceSucceeded=%s loadedMetadataAfter=%s ammoStatAfter=%s fullMetaAfter=%s",
+                playerRef.getUuid(),
+            true,
+                AmmoToStore.metadataDebugString(
+                nextLoadedAmmo.getItemIds(),
+                nextLoadedAmmo.getItemQuantities()
+                ),
+            autoSetAmmoStat ? (float) ammoUsed + alreadyLoadedFromMetadata : ammoStatValue,
+            String.valueOf(heldItem.getMetadata())
         );
     }
 
