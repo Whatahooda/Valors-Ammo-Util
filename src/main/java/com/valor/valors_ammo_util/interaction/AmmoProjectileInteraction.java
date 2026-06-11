@@ -17,6 +17,8 @@ import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.modules.entity.component.BoundingBox;
 import com.hypixel.hytale.server.core.modules.entity.component.ModelComponent;
 import com.hypixel.hytale.server.core.modules.entity.component.PersistentModel;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
+import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHandler;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.SimpleInstantInteraction;
 import com.hypixel.hytale.server.core.modules.projectile.ProjectileModule;
@@ -30,10 +32,12 @@ import com.valor.valors_ammo_util.AmmoToStore;
 import com.valor.valors_ammo_util.ValorAmmoPayload;
 import com.valor.valors_ammo_util.ValorAmmoUtil;
 import com.valor.valors_ammo_util.component.AmmoInfoComponent;
+import com.valor.valors_ammo_util.component.LoadedAmmoComponent;
 import org.joml.Vector3d;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class AmmoProjectileInteraction extends SimpleInstantInteraction implements BallisticDataProvider {
@@ -95,11 +99,13 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
                 return;
             }
 
-            String[] itemIdsRaw = heldItem.getFromMetadataOrNull(AmmoToStore.KEYED_CODEC_ID);
-            assert itemIdsRaw != null;
+            LoadedAmmoComponent loadedAmmoComponent = commandBuffer.getComponent(ref, ValorAmmoUtil.getLoadedAmmoComponentType());
+            if (loadedAmmoComponent == null) {
+                return;
+            }
 
-            int[] itemQuantitiesRaw = heldItem.getFromMetadataOrNull(AmmoToStore.KEYED_CODEC_QUANTITY);
-            assert itemQuantitiesRaw != null;
+            String[] itemIdsRaw = loadedAmmoComponent.getItemIds();
+            int[] itemQuantitiesRaw = loadedAmmoComponent.getItemQuantities();
 
             // If there's no ammo info, stop here
             AmmoToStore ammoToUse = new AmmoToStore(itemIdsRaw, itemQuantitiesRaw);
@@ -114,12 +120,26 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
 
             // Now remove 1 from the used item quantity and apply the change to the held item
             ammoToUse.useItem();
-            context.setHeldItem(
-                    ammoToUse.addMetadataToStack(heldItem)
+
+            ArrayList<String> nextIds = new ArrayList<>();
+            ArrayList<Integer> nextQty = new ArrayList<>();
+            for (int idx = 0; idx < ammoToUse.size(); idx++) {
+                nextIds.add(ammoToUse.getItemId(idx));
+                nextQty.add(ammoToUse.getItemQuantity(idx));
+            }
+            LoadedAmmoComponent updatedLoadedAmmo = new LoadedAmmoComponent(
+                    AmmoToStore.listToArray(nextIds),
+                    nextQty.stream().mapToInt(Integer::intValue).toArray()
             );
-            context.getHeldItemContainer().replaceItemStackInSlot(
-                    context.getHeldItemSlot(), heldItem, ammoToUse.addMetadataToStack(heldItem)
-            );
+            commandBuffer.replaceComponent(ref, ValorAmmoUtil.getLoadedAmmoComponentType(), updatedLoadedAmmo);
+
+                EntityStatMap statMap = context.getEntity().getStore().getComponent(context.getEntity(), EntityStatMap.getComponentType());
+                if (statMap != null) {
+                statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), AmmoToStore.getStoredAmmoCount(
+                    updatedLoadedAmmo.getItemIds(),
+                    updatedLoadedAmmo.getItemQuantities()
+                ));
+                }
 
             // Attach ammo info component
             AmmoInfoComponent ammoInfoComponent = new AmmoInfoComponent(ammoPayload.getAmmoItemId(), ammoPayload.getModelAssetId(), ammoPayload.getOnHitId(), ammoPayload.getOnMissId());
