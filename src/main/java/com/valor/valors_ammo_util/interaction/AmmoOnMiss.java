@@ -25,14 +25,6 @@ public class AmmoOnMiss extends SimpleInstantInteraction {
         if (commandBuffer != null) {
             AmmoInfoComponent ammoInfoComponent = commandBuffer.getComponent(ref, ValorAmmoUtil.getAmmoInfoComponentType());
             if (ammoInfoComponent != null && ammoInfoComponent.getOnMissId() != null) {
-                ValorAmmoUtil.LOGGER.atInfo().log(
-                        "[VAU][ShotMiss] projectile=%s ammoItem=%s model=%s onHit=%s onMiss=%s",
-                        ref,
-                        ammoInfoComponent.getItemId(),
-                        ammoInfoComponent.getModelId(),
-                        ammoInfoComponent.getOnHitId(),
-                        ammoInfoComponent.getOnMissId()
-                );
                 String onMissId = ammoInfoComponent.getOnMissId();
                 RootInteraction onMiss = RootInteraction.getAssetMap().getAsset(onMissId);
                 if (onMiss == null) {

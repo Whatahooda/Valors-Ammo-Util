@@ -65,7 +65,6 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         EntityStatMap statMap = interactionContext.getEntity().getStore().getComponent(interactionContext.getEntity(), EntityStatMap.getComponentType());
         assert statMap != null;
         EntityStatValue ammoStat = statMap.get(DefaultEntityStatTypes.getAmmo());
-        float ammoStatValue = ammoStat != null ? ammoStat.get() : 0;
         double remainingAmmoCost = amountToRemove;
         double ammoUsed = 0;
 
@@ -73,17 +72,6 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         String[] existingIds = loadedAmmoComponent != null ? loadedAmmoComponent.getItemIds() : new String[0];
         int[] existingQuantities = loadedAmmoComponent != null ? loadedAmmoComponent.getItemQuantities() : new int[0];
         int alreadyLoadedFromMetadata = AmmoToStore.getStoredAmmoCount(existingIds, existingQuantities);
-
-        ValorAmmoUtil.LOGGER.atInfo().log(
-            "[VAU][DrawStart] player=%s bowId=%s bowHash=%d bowIdentity=%d ammoStat=%s metadata=%s fullMeta=%s",
-                playerRef.getUuid(),
-            heldItem.getItemId(),
-                heldItem.hashCode(),
-                System.identityHashCode(heldItem),
-                ammoStatValue,
-                AmmoToStore.metadataDebugString(existingIds, existingQuantities),
-                String.valueOf(heldItem.getMetadata())
-        );
 
         if (ammoStat != null && ammoStat.getMax() > 0) {
             remainingAmmoCost = Math.min(remainingAmmoCost, ammoStat.getMax() - alreadyLoadedFromMetadata);
@@ -97,14 +85,6 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
 
         if (ammoStat != null && ammoStat.getMax() > 0 && alreadyLoadedFromMetadata >= ammoStat.getMax()) {
                 statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), alreadyLoadedFromMetadata);
-            ValorAmmoUtil.LOGGER.atInfo().log(
-                "[VAU][DrawAlreadyLoaded] player=%s loadedMetadata=%d ammoStat=%s ammoStatMax=%s fullMeta=%s",
-                    playerRef.getUuid(),
-                    alreadyLoadedFromMetadata,
-                    ammoStatValue,
-                ammoStat.getMax(),
-                String.valueOf(heldItem.getMetadata())
-            );
             return;
         }
 
@@ -128,8 +108,6 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         for (short i : ammoFound) {
             ItemStack itemStack = inventory.getItemStack(i);
             assert itemStack != null;
-            int beforeQuantity = itemStack.getQuantity();
-            double beforeDurability = itemStack.getDurability();
             if (itemStack.getMaxDurability() > 0) {
                 if (itemStack.getDurability() < remainingAmmoCost) {
                     ammoToStore.addItem(itemStack.getItemId(), (int) itemStack.getDurability());
@@ -138,35 +116,12 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
                     ammoUsed += itemStack.getDurability();
                     inventory.replaceItemStackInSlot(i, itemStack, itemStack.withDurability(0));
 
-                    ValorAmmoUtil.LOGGER.atInfo().log(
-                            "[VAU][AmmoRemove] player=%s arrowId=%s ammoHash=%d ammoIdentity=%d slot=%d beforeQty=%d beforeDurability=%s afterDurability=0 used=%s",
-                            playerRef.getUuid(),
-                            itemStack.getItemId(),
-                            itemStack.hashCode(),
-                            System.identityHashCode(itemStack),
-                            i,
-                            beforeQuantity,
-                            beforeDurability,
-                            ammoUsed
-                    );
                 }
                 else {
                     ammoToStore.addItem(itemStack.getItemId(), (int) remainingAmmoCost);
 
                     inventory.replaceItemStackInSlot(i, itemStack, itemStack.withDurability(itemStack.getDurability() - remainingAmmoCost));
                     ammoUsed += remainingAmmoCost;
-                    ValorAmmoUtil.LOGGER.atInfo().log(
-                            "[VAU][AmmoRemove] player=%s arrowId=%s ammoHash=%d ammoIdentity=%d slot=%d beforeQty=%d beforeDurability=%s afterDurability=%s used=%s",
-                            playerRef.getUuid(),
-                            itemStack.getItemId(),
-                            itemStack.hashCode(),
-                            System.identityHashCode(itemStack),
-                            i,
-                            beforeQuantity,
-                            beforeDurability,
-                            itemStack.getDurability() - remainingAmmoCost,
-                            ammoUsed
-                    );
                     break;
                 }
             }
@@ -178,34 +133,12 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
                     ammoUsed += itemStack.getQuantity();
                     inventory.removeItemStackFromSlot(i);
 
-                    ValorAmmoUtil.LOGGER.atInfo().log(
-                            "[VAU][AmmoRemove] player=%s arrowId=%s ammoHash=%d ammoIdentity=%d slot=%d beforeQty=%d afterQty=0 used=%s",
-                            playerRef.getUuid(),
-                            itemStack.getItemId(),
-                            itemStack.hashCode(),
-                            System.identityHashCode(itemStack),
-                            i,
-                            beforeQuantity,
-                            ammoUsed
-                    );
                 }
                 else {
                     ammoToStore.addItem(itemStack.getItemId(), (int) remainingAmmoCost);
 
                     inventory.removeItemStackFromSlot(i, (int) remainingAmmoCost);
                     ammoUsed += remainingAmmoCost;
-                    ValorAmmoUtil.LOGGER.atInfo().log(
-                            "[VAU][AmmoRemove] player=%s arrowId=%s ammoHash=%d ammoIdentity=%d slot=%d beforeQty=%d removed=%d afterQty=%d used=%s",
-                            playerRef.getUuid(),
-                            itemStack.getItemId(),
-                            itemStack.hashCode(),
-                            System.identityHashCode(itemStack),
-                            i,
-                            beforeQuantity,
-                            (int) remainingAmmoCost,
-                            beforeQuantity - (int) remainingAmmoCost,
-                            ammoUsed
-                    );
                     break;
                 }
             }
@@ -234,17 +167,6 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
             commandBuffer.replaceComponent(playerEntity, ValorAmmoUtil.getLoadedAmmoComponentType(), nextLoadedAmmo);
         }
 
-        ValorAmmoUtil.LOGGER.atInfo().log(
-            "[VAU][DrawLoaded] player=%s replaceSucceeded=%s loadedMetadataAfter=%s ammoStatAfter=%s fullMetaAfter=%s",
-                playerRef.getUuid(),
-            true,
-                AmmoToStore.metadataDebugString(
-                nextLoadedAmmo.getItemIds(),
-                nextLoadedAmmo.getItemQuantities()
-                ),
-            autoSetAmmoStat ? (float) ammoUsed + alreadyLoadedFromMetadata : ammoStatValue,
-            String.valueOf(heldItem.getMetadata())
-        );
     }
 
     private void searchInventoryForAmmo(ItemContainer inventoryContainer,

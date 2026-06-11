@@ -101,7 +101,6 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
 
             LoadedAmmoComponent loadedAmmoComponent = commandBuffer.getComponent(ref, ValorAmmoUtil.getLoadedAmmoComponentType());
             if (loadedAmmoComponent == null) {
-                ValorAmmoUtil.LOGGER.atInfo().log("[VAU][ShotFired] No loaded ammo on player component");
                 return;
             }
 
@@ -118,19 +117,6 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
             assert ammoItem != null;
 
             ValorAmmoPayload ammoPayload = ValorAmmoPayload.generateAmmoPayload(ammoItem, true, AmmoInfo.AMMO_INFO_VAR_ID);
-
-                ValorAmmoUtil.LOGGER.atInfo().log(
-                    "[VAU][ShotFired] shooterEntity=%s bowId=%s bowHash=%d bowIdentity=%d arrowId=%s arrowHash=%d arrowIdentity=%d metadataBefore=%s fullMetaBefore=%s",
-                    ref,
-                    heldItem.getItemId(),
-                    heldItem.hashCode(),
-                    System.identityHashCode(heldItem),
-                    ammoItem.getId(),
-                    ammoItem.hashCode(),
-                    System.identityHashCode(ammoItem),
-                    AmmoToStore.metadataDebugString(itemIdsRaw, itemQuantitiesRaw),
-                    String.valueOf(heldItem.getMetadata())
-                );
 
             // Now remove 1 from the used item quantity and apply the change to the held item
             ammoToUse.useItem();
@@ -154,17 +140,6 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
                     updatedLoadedAmmo.getItemQuantities()
                 ));
                 }
-
-                ValorAmmoUtil.LOGGER.atInfo().log(
-                    "[VAU][ShotFiredPost] shooterEntity=%s replaceSucceeded=%s metadataAfter=%s fullMetaAfter=%s",
-                    ref,
-                    true,
-                    AmmoToStore.metadataDebugString(
-                        updatedLoadedAmmo.getItemIds(),
-                        updatedLoadedAmmo.getItemQuantities()
-                    ),
-                    String.valueOf(heldItem.getMetadata())
-                );
 
             // Attach ammo info component
             AmmoInfoComponent ammoInfoComponent = new AmmoInfoComponent(ammoPayload.getAmmoItemId(), ammoPayload.getModelAssetId(), ammoPayload.getOnHitId(), ammoPayload.getOnMissId());
