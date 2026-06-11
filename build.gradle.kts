@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.valor"
-version = "0.2.6"
+version = "0.2.7"
 val javaVersion = 25
 
 repositories {
@@ -27,7 +27,7 @@ hytale {
 
     // uncomment if you want to develop your mod against the pre-release version of the game.
     //
-    updateChannel = "pre-release"
+    //updateChannel = "pre-release"
 }
 
 java {

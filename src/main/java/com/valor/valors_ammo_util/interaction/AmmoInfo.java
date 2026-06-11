@@ -3,6 +3,7 @@ package com.valor.valors_ammo_util.interaction;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.server.core.modules.interaction.interaction.config.RootInteraction;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.SimpleInteraction;
 
 public class AmmoInfo extends SimpleInteraction {
@@ -31,10 +32,10 @@ public class AmmoInfo extends SimpleInteraction {
                 .append(new KeyedCodec<>("ModelAssetId", Codec.STRING), (interaction, m) -> interaction.modelAssetId = m, (interaction) -> interaction.modelAssetId)
                 .documentation("Model Id to use for the created projectile")
                 .add()
-                .append(new KeyedCodec<>("AmmoOnHitId", Codec.STRING), (interaction, r) -> interaction.interactionOnHitId = r, (interaction) -> interaction.interactionOnHitId)
+                .append(new KeyedCodec<>("AmmoOnHitId", RootInteraction.CHILD_ASSET_CODEC), (interaction, m) -> interaction.interactionOnHitId = m, interaction -> interaction.interactionOnHitId)
                 .documentation("Interaction Id to trigger on Ammo Projectile Hit such as Damage")
                 .add()
-                .append(new KeyedCodec<>("AmmoOnMissId", Codec.STRING), (interaction, r) -> interaction.interactionOnMissId = r, (interaction) -> interaction.interactionOnMissId)
+                .append(new KeyedCodec<>("AmmoOnMissId", RootInteraction.CHILD_ASSET_CODEC), (interaction, m) -> interaction.interactionOnMissId = m, interaction -> interaction.interactionOnMissId)
                 .documentation("Interaction Id to trigger on Ammo Projectile Miss")
                 .add()
                 .build();

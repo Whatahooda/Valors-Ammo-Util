@@ -77,6 +77,45 @@ public class AmmoToStore {
         return withAll;
     }
 
+    public static ItemStack removeMetadataFromStack(ItemStack itemStack) {
+        ItemStack withoutIds = itemStack.withMetadata(KEYED_CODEC_ID, null);
+        return withoutIds.withMetadata(KEYED_CODEC_QUANTITY, null);
+    }
+
+    public static int getStoredAmmoCount(String[] existingIds, int[] existingQuantities) {
+        if (existingIds == null || existingQuantities == null || existingIds.length != existingQuantities.length) {
+            return 0;
+        }
+
+        int total = 0;
+        for (int quantity : existingQuantities) {
+            if (quantity > 0) {
+                total += quantity;
+            }
+        }
+        return total;
+    }
+
+    public static String metadataDebugString(String[] existingIds, int[] existingQuantities) {
+        if (existingIds == null || existingQuantities == null) {
+            return "ids=null, qty=null";
+        }
+        if (existingIds.length != existingQuantities.length) {
+            return "length-mismatch ids=" + existingIds.length + ", qty=" + existingQuantities.length;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        for (int i = 0; i < existingIds.length; i++) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            builder.append(existingIds[i]).append(":").append(existingQuantities[i]);
+        }
+        builder.append("]");
+        return builder.toString();
+    }
+
     public ItemStack addMetadataToStack(ItemStack itemStack) {
         return addMetadataToStack(itemStack, this.itemIds, this.itemQuantity);
     }
