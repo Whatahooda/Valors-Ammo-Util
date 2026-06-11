@@ -51,4 +51,8 @@ This tool is far from finished, so there's a lot more features I plan on adding.
 - **Projectile Models:** Currently projectile models are not being updated with the models specified in item `AmmoInfo`. I am actively looking into fixing this.
 
 ## Credits
+Valors Ammo Utility was created by [Valor/Whatahooda](https://github.com/Whatahooda)
+
+[GlobalHive](https://github.com/GlobalHive) was a massive help and fixed some bugs I was having trouble with.
+
 Thanks to [Up](https://github.com/UpcraftLP) whom created the template, and [Kaupenjoe](https://github.com/Kaupenjoe) who modified and shared it. 
