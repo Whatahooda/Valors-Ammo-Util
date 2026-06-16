@@ -133,13 +133,13 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
             );
             commandBuffer.replaceComponent(ref, ValorAmmoUtil.getLoadedAmmoComponentType(), updatedLoadedAmmo);
 
-                EntityStatMap statMap = context.getEntity().getStore().getComponent(context.getEntity(), EntityStatMap.getComponentType());
-                if (statMap != null) {
-                statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), AmmoToStore.getStoredAmmoCount(
-                    updatedLoadedAmmo.getItemIds(),
-                    updatedLoadedAmmo.getItemQuantities()
-                ));
-                }
+//            EntityStatMap statMap = context.getEntity().getStore().getComponent(context.getEntity(), EntityStatMap.getComponentType());
+//            if (statMap != null) {
+//            statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), AmmoToStore.getStoredAmmoCount(
+//                updatedLoadedAmmo.getItemIds(),
+//                updatedLoadedAmmo.getItemQuantities()
+//            ));
+//            }
 
             // Attach ammo info component
             AmmoInfoComponent ammoInfoComponent = new AmmoInfoComponent(ammoPayload.getAmmoItemId(), ammoPayload.getModelAssetId(), ammoPayload.getOnHitId(), ammoPayload.getOnMissId());
