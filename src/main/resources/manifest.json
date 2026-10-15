@@ -1,18 +1,25 @@
 {
-  "Group": "${plugin_group}",
-  "Name": "${plugin_name}",
-  "Version": "${plugin_version}",
-  "Description": "${plugin_description}",
-  "Authors": [
-    {
-      "Name": "${plugin_author}"
+    "Group": "Valor",
+    "Name": "ValorsAmmoUtil",
+    "Version": "0.3.2",
+    "Description": "Adds Asset Editor tools to help add and support more ammunition's.",
+    "Authors": [
+        {
+            "Name": "Valor"
+        }
+    ],
+    "Website": "undefined",
+    "ServerVersion": ">=0.7.0 <0.8.0",
+    "Dependencies": {
+        "Hytale:AssetModule": "*"
+    },
+    "OptionalDependencies": {
+        
+    },
+    "DisabledByDefault": false,
+    "IncludesAssetPack": true,
+    "Main": "com.valor.valors_ammo_util.ValorAmmoUtil",
+    "UpdateChecker": {
+        "CurseForge": "1457603"
     }
-  ],
-  "Website": "${plugin_website}",
-  "ServerVersion": "${server_version}",
-  "Dependencies": {},
-  "OptionalDependencies": {},
-  "DisabledByDefault": false,
-  "IncludesAssetPack": true,
-  "Main": "${plugin_main_entrypoint}"
 }

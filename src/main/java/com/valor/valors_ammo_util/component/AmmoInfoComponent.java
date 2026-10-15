@@ -2,7 +2,9 @@ package com.valor.valors_ammo_util.component;
 
 import com.hypixel.hytale.component.Component;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
+
+
 
 public class AmmoInfoComponent implements Component<EntityStore> {
     @Nullable

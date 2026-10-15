@@ -13,13 +13,15 @@ import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Sim
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.valor.valors_ammo_util.ValorAmmoUtil;
 import com.valor.valors_ammo_util.component.AmmoInfoComponent;
-import org.jspecify.annotations.NonNull;
+
+import javax.annotation.Nonnull;
+
 
 public class AmmoOnHit extends SimpleInstantInteraction {
     public static final BuilderCodec<AmmoOnHit> CODEC;
 
     @Override
-    protected void firstRun(@NonNull InteractionType interactionType, @NonNull InteractionContext interactionContext, @NonNull CooldownHandler cooldownHandler) {
+    protected void firstRun(@Nonnull InteractionType interactionType, @Nonnull InteractionContext interactionContext, @Nonnull CooldownHandler cooldownHandler) {
         Ref<EntityStore> ref = interactionContext.getEntity();
 
         CommandBuffer<EntityStore> commandBuffer = interactionContext.getCommandBuffer();

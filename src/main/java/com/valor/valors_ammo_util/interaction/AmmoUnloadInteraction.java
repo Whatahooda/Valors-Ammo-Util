@@ -19,13 +19,13 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.valor.valors_ammo_util.ValorAmmoUtil;
 import com.valor.valors_ammo_util.component.LoadedAmmoComponent;
-import org.jspecify.annotations.NonNull;
+import javax.annotation.Nonnull;
 
 public class AmmoUnloadInteraction extends SimpleInstantInteraction {
     public static final BuilderCodec<AmmoUnloadInteraction> CODEC;
 
     @Override
-    protected void firstRun(@NonNull InteractionType interactionType, @NonNull InteractionContext interactionContext, @NonNull CooldownHandler cooldownHandler) {
+    protected void firstRun(@Nonnull InteractionType interactionType, @Nonnull InteractionContext interactionContext, @Nonnull CooldownHandler cooldownHandler) {
         PlayerRef playerRef = interactionContext.getEntity().getStore().getComponent(interactionContext.getEntity(), PlayerRef.getComponentType());
         Player player = interactionContext.getEntity().getStore().getComponent(interactionContext.getEntity(), Player.getComponentType());
         if (playerRef == null || player == null) {

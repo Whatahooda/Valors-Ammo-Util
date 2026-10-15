@@ -1,58 +1,161 @@
-# Valor's Ammo Utility
-Welcome! This is a Hytale Asset Editor tool to help add different item ammunitions to the game.
-In current base Hytale, you have to manually search for a specific item in your inventory with the `modifyInventory` interaction type. Then chain this interaction over and over for each ammunition item you have. Not to mention there is no way to support new weapons or seperate modded weapons.
+# Hytale Plugin Template
 
-But no more! This utility mod simplifies that process. It adds new Asset Editor interaction types to build your projectile items and weapons.
+A ready-to-use starting point for creating Hytale server plugins with Java, _or Kotlin_. If you've
+been using the Asset Editor and want to start writing server-side logic — custom commands, event
+handling, gameplay systems — this is the simplest place to begin.
 
-## Asset Editor Tools
-There are a handful of new interaction types to support more ammunitions. Here's a list
- - [AmmoModifyInventory](#AmmoModifyInventory)
- - [AmmoProjectile](#AmmoProjectile)
- - [AmmoOnHit](#AmmoOnHit-and-AmmoOnMiss)
- - [AmmoOnMiss](#AmmoOnHit-and-AmmoOnMiss)
- - [AmmoRemove](#AmmoRemove)
- - [AmmoInfo](#AmmoInfo)
+This template uses the [Hytale Gradle Plugin](https://github.com/AzureDoom/Hytale-Gradle-Plugin),
+a Gradle plugin maintained by AzureDoom for Hytale mod/plugin development. It handles the repetitive
+project setup work for you, including manifest generation, validation, local server runs, IDE source
+setup, and optional hosted Hytale Javadoc injection.
 
-### AmmoModifyInventory
-This is a copy of Hytale's `modifyInventory`, but modified to support looking for more than one item.
-There are 4 new entries to customize and process logic for ammo.
-1) `TagsToFind` is a array/list of tags to look for in an item. The tag can be located in any tag key.
-2) `AmountToRemove`  is the amount of items to remove from that stack.
-3) `AmmoInfoVar` is the Interaction Var to access `AmmoInfo` on the item asset. By default, I like to use "Ammo_Info". Then on my item add a interaction var that only includes a `AmmoInfo` interaction type.
-4) `UseItemModel` sets whether the created projectile should use the ModelAsset provided in the item's `AmmoInfo`.
+## How to start
 
-Then make sure to add your normal `next` and `failed` interactions to continue the chain. At some point down the chain you'll need to use `AmmoProjectile`.
+1. Copy the template by downloading it or using the **Use this template** button.
+2. [Configure or install the Java SDK](https://hytalemodding.dev/en/docs/guides/plugin/setting-up-env)
+   to use Java 25. JetBrains Runtime is recommended for the best hot-reload/debugging experience.
+3. Open the project in your favorite IDE. We recommend
+   [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
+4. Update the project values in `gradle.properties`:
+    - `rootProject.name` in `settings.gradle.kts`
+    - `group`
+    - `manifest_group`
+    - `mod_name`
+    - `mod_id`
+    - `main_class`
+    - `mod_author`
+    - `mod_description`
+    - `mod_url`
+5. Optionally run `./gradlew` if your IDE does not automatically sync the project.
+6. Prepare the Hytale development environment:
 
-### AmmoProjectile
-Treat `AmmoProjectile` as the exact same as Hytale's `Projectile` interaction type. Call it and provide it with a config to create a projectile. This is needed to process our ammo information and add that information to the spawned projectile.
+   ```bash
+   ./gradlew setupHytaleDev
+   ```
 
-### AmmoOnHit and AmmoOnMiss
-These 2 interactions are what apply any ammo interactions specified in an item's `AmmoInfo`. Insert them somewhere into your projectile config's onHit or onMiss interaction chains.
+7. Run the local development server:
 
-I like to override `DamageEntityParent` and `Common_Projectile_Miss` and insert onHit and onMiss into them. Though it's probably not best practice to override vanilla assets.
+   ```bash
+   ./gradlew runServer
+   ```
 
-### AmmoRemove
-When despawning your ammo projectile, use the `AmmoRemove` interaction. Due to unknown issues, interaction SFX and VFX break when using the default `removeEntity`.
+> On Windows, use `./gradlew.bat` or `gradlew.bat` instead of `./gradlew`. The Gradle wrapper is
+> included so you do not need to install Gradle separately; only Java is required.
 
-### AmmoInfo
-This interaction will always be located in an Interaction Var on your item to be used as ammo. It holds all the information relevant to the created projectile from the ammo item.
+When the server starts, the output may prompt you to authorize your Hytale server. After that, you
+can begin developing your plugin while the server handles local development runs.
 
-It has 3 entries you can fill out, they can also be null.
-1) `ModelAssetId` is the string Id of the model asset to use for the projectile.
-2) `AmmoOnHitId` is the string Id to a `RootInteraction` containing your on hit interactions for that ammo.
-3) `AmmoOnMissId` is the exact same as OnHit, just for on miss.
+From here, the [HytaleModding guides](https://hytalemodding.dev/en/docs/guides/plugin/build-and-test)
+cover more details.
 
-## Future Plans and Changes
-This tool is far from finished, so there's a lot more features I plan on adding.
-- **Modder QOL:** Some interaction entries can be made to open a list of assets, rather than manually entering in string Ids
-- **Reloadable Support:** Currently reloadable weapons are not supported in any way. At some point I'll get more systems in place to get them working with custom ammo.
+## Hytale Gradle Plugin
 
-## Known Bugs
-- **Projectile Models:** Currently projectile models are not being updated with the models specified in item `AmmoInfo`. I am actively looking into fixing this.
+This template is built around AzureDoom's `com.azuredoom.hytale-tools` Gradle plugin.
 
-## Credits
-Valors Ammo Utility was created by [Valor/Whatahooda](https://github.com/Whatahooda)
+The plugin is configured in `build.gradle.kts`:
 
-[GlobalHive](https://github.com/GlobalHive) was a massive help and fixed some bugs I was having trouble with.
+```kotlin
+plugins {
+    idea
+    java
+    id("com.azuredoom.hytale-tools") version "1.+"
+}
+```
 
-Thanks to [Up](https://github.com/UpcraftLP) whom created the template, and [Kaupenjoe](https://github.com/Kaupenjoe) who modified and shared it. 
+The AzureDoom Maven repository is configured in `settings.gradle.kts`:
+
+```kotlin
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        maven {
+            name = "AzureDoom Maven"
+            url = uri("https://maven.azuredoom.com/mods")
+        }
+    }
+}
+```
+
+Most plugin-specific settings are controlled from `gradle.properties` and passed into the
+`hytaleTools` block in `build.gradle.kts`. This keeps common project metadata in one easy-to-edit
+place.
+
+For full plugin documentation, configuration options, tasks, and multi-project setup, visit the
+[Hytale Gradle Plugin repository](https://github.com/AzureDoom/Hytale-Gradle-Plugin).
+
+## Useful commands
+
+```bash
+# Sync/setup the local Hytale development environment
+./gradlew setupHytaleDev
+
+# Run the local Hytale server
+./gradlew runServer
+
+# Run the server with debugging and hot swap enabled
+./gradlew runServer -Ddebug=true -Dhotswap=true
+
+# Check your JVM and hot swap setup
+./gradlew hytaleJvmDoctor
+
+# Build the plugin
+./gradlew build
+
+# Refresh dependencies if something fails to resolve
+./gradlew build --refresh-dependencies
+```
+
+## Project structure
+
+```text
+src/main/java/        Plugin source code
+src/main/resources/   Plugin resources, including manifest.json
+gradle.properties     Main template configuration
+build.gradle.kts      Gradle build and Hytale Gradle Plugin configuration
+settings.gradle.kts   Plugin repositories and project name
+```
+
+## Manifest configuration
+
+The generated `manifest.json` is driven by the values in `gradle.properties`, including:
+
+- `manifest_group`
+- `mod_id`
+- `version`
+- `mod_description`
+- `mod_author`
+- `mod_url`
+- `main_class`
+- `manifest_dependencies`
+- `manifest_opt_dependencies`
+- `manifestServerVersion`
+
+After changing these values, run:
+
+```bash
+./gradlew updatePluginManifest
+```
+
+## Troubleshooting
+
+- **Gradle sync fails in IntelliJ** — Check that Java 25 is installed and configured under
+  **File → Project Structure → SDKs**.
+- **The Hytale Gradle Plugin does not resolve** — Make sure `settings.gradle.kts` includes the
+  AzureDoom Maven repository at `https://maven.azuredoom.com/mods`.
+- **Build fails with missing dependencies** — Run `./gradlew build --refresh-dependencies` and make
+  sure you have internet access.
+- **Permission denied on `./gradlew`** — Run `chmod +x gradlew` on macOS/Linux.
+- **Hot reload or enhanced class redefinition does not work** — Use JetBrains Runtime and try
+  `./gradlew hytaleJvmDoctor` to verify your JVM setup.
+
+## Resources
+
+- [Hytale Gradle Plugin](https://github.com/AzureDoom/Hytale-Gradle-Plugin)
+- [Hytale Modding Guides](https://hytalemodding.dev)
+- [Hytale Modding Discord](https://discord.gg/hytalemodding)
+
+## License
+
+Add your own license after copying the template. We recommend MIT, BSD, or Apache to keep the
+modding community open.

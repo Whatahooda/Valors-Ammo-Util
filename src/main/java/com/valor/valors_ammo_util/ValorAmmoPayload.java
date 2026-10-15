@@ -4,7 +4,8 @@ import com.hypixel.hytale.server.core.asset.type.item.config.Item;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Interaction;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.RootInteraction;
 import com.valor.valors_ammo_util.interaction.AmmoInfo;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
+
 
 public class ValorAmmoPayload {
     @Nullable

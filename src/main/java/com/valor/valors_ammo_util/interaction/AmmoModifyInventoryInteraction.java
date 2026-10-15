@@ -24,9 +24,9 @@ import com.valor.valors_ammo_util.AmmoToStore;
 import com.valor.valors_ammo_util.ValorAmmoUtil;
 import com.valor.valors_ammo_util.component.LoadedAmmoComponent;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
@@ -43,7 +43,7 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
     private String itemAmmoInfoVar = null;
 
     @Override
-    protected void firstRun(@NonNull InteractionType interactionType, @NonNull InteractionContext interactionContext, @NonNull CooldownHandler cooldownHandler) {
+    protected void firstRun(@Nonnull InteractionType interactionType, @Nonnull InteractionContext interactionContext, @Nonnull CooldownHandler cooldownHandler) {
         PlayerRef playerRef = interactionContext.getEntity().getStore().getComponent(interactionContext.getEntity(), PlayerRef.getComponentType());
         Player player = interactionContext.getEntity().getStore().getComponent(interactionContext.getEntity(), Player.getComponentType());
         if (playerRef == null || player == null) {
@@ -210,13 +210,13 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         }
     }
 
-    private boolean isItemAmmo(@NonNull Item item, String[] tags, String[] items) {
+    private boolean isItemAmmo(@Nonnull Item item, String[] tags, String[] items) {
         if (itemHasTag(item, tags) != null) return true;
         return itemIsSpecified(item, items);
     }
 
     @Nullable
-    private String itemHasTag(@NonNull Item item, String[] tags) {
+    private String itemHasTag(@Nonnull Item item, String[] tags) {
         if (tags != null && tags.length > 0) {
             Map<String, String[]> rawTags = item.getData().getRawTags();
             for (String tag : tags) {
@@ -228,7 +228,7 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         return null;
     }
 
-    private boolean itemIsSpecified(@NonNull Item item, String[] items) {
+    private boolean itemIsSpecified(@Nonnull Item item, String[] items) {
         return items != null && items.length > 0 && Arrays.asList(items).contains(item.getId());
     }
 
